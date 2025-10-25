@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>QuaggaJS Barcode Scanner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h2 {
+            margin: 20px 0;
+        }
+
+        #camera {
+            width: 100%;
+            max-width: 640px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        #camera video {
+            width: 100%;
+            height: auto;
+        }
+
+        #results {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 640px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .barcode-card {
+            background: #fff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            font-size: 1.1em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .barcode-card span {
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h2>Barcode Scanner</h2>
+    <div id="camera"></div>
+
+    <div id="results">
+        <!-- Scanned barcodes will appear here -->
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
+    <script>
+        const cameraElem = document.querySelector("#camera");
+        const resultsContainer = document.querySelector("#results");
+
+        // Initialize QuaggaJS
+        const quaggaConf = {
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: cameraElem,
+                constraints: {
+                    facingMode: "environment",
+                    width: { ideal: 640 },
+                    height: { ideal: 480 }
+                }
+            },
+            decoder: {
+                readers: ["code_128_reader", "ean_reader", "ean_8_reader"]
+            },
+            locate: true
+        };
+
+        Quagga.init(quaggaConf, err => {
+            if (err) {
+                console.error("Quagga init error:", err);
+                resultsContainer.innerHTML = "<p style='color:red'>Error initializing camera.</p>";
+                return;
+            }
+            Quagga.start();
+            console.log("Quagga started.");
+        });
+
+        // Function to update the UI
+        function updateUI(barcode) {
+            const card = document.createElement("div");
+            card.classList.add("barcode-card");
+            card.innerHTML = `<span>Scanned Barcode:</span> ${barcode}`;
+            resultsContainer.prepend(card); // Shows latest scan on top
+        }
+
+        // Listen for detected barcodes
+        Quagga.onDetected(result => {
+            const code = result.codeResult.code;
+            updateUI(code);
+            console.log("Detected barcode:", code);
+
+            // Optional: stop scanning after first detection
+            // Quagga.stop();
+        });
+    </script>
+</body>
+</html>
+                              
